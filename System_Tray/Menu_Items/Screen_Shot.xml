@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <Action name="Screen Shot">
+    <Arguments>
+      <argument>V:\aw_config\Git_Live_Code\Global_Systems\Command_Line_Apps\System_Tray\Tray_Tools\screenshot.py</argument>
+    </Arguments>
+  </Action>
+</Root>

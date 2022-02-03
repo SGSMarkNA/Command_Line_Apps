@@ -1,0 +1,26 @@
+#!wing
+#!version=6.0
+##################################################################
+# Wing IDE project file                                          #
+##################################################################
+[project attributes]
+console.toolbox = [{'autosave': False,
+                    'cmd': '${WING:PYTHON} "%s"',
+                    'env': ('project',
+                            [u'']),
+                    'hostname': ('project',
+                                 None),
+                    'id': 'cmd-OZL5Cs6QoCAfZQe2',
+                    'io_encoding': None,
+                    'key_binding': 'Ctrl-Alt-Shift-F6',
+                    'line_mode': True,
+                    'pseudo_tty': False,
+                    'pypath': ('project',
+                               []),
+                    'raise_panel': True,
+                    'rundir': ('project',
+                               u''),
+                    'title': 'Run File'}]
+proj.file-list = [loc('compare_Tools.py'),
+                  loc('Display_Layer_Compair_Main_Window.ui')]
+proj.file-type = 'shared'

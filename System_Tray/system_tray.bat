@@ -1,0 +1,1 @@
+\\isln-smb\aw_config\Apps\Python\Python27\Gpythonw.exe "\\isln-smb\aw_config\Git_Live_Code\Global_Systems\Command_Line_Apps\System_Tray\systray.awpyexe"
