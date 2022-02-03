@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <Menus>
+    <Menu name="Power Point Builders">
+      <!--Actions Found Within Menu Element Will Be Added To That Menu-->
+      <Action name="Folders To PDFs">
+        <!--Arguments Are The Options Used Along Side The Executable In Python This would Be The sys.argv varaible
+        This Will Most Of The Time Be A Single Arg That Points To The File That The Executeable Is To Run-->
+        <Arguments>
+          <argument>\\isln-smb\aw_config\Git_Live_Code\Global_Systems\Command_Line_Apps\System_Tray\Tray_Tools\PowerPoint_Builder\Folders_To_PDFs.py</argument>
+        </Arguments>
+      </Action>
+    </Menu>
+  </Menus>
+</Root>

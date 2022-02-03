@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <!--Action Elements With No path_to_executable Attribute will be set to \\blue\app_config\python\Python27\pythonw.exe-->
+  <!--Actions Found Within The Root Element Will Be Added To The Top Level Tray Menu-->
+  <!--The icon attribute is not currently implamented-->
+  <!--The name attribute Of Both A Menu and Action Are Used As The Display Name Of That Action Or Menu-->
+  <!--If an Action has the same name as a pre existing one within the same menu that action will ignored-->
+  <!--If a Menu has the same name as a pre existing one any action elements within that menu will be added to the pre existing menu.
+  As long as the comment above does not apply-->
+  <Action name="Screen Shot" icon="">
+    <!--Arguments Are The Options Used Along Side The Executable In Python This would Be The sys.argv varaible
+    This Will Most Of The Time Be A Single Arg That Points To The File That Executeable Is To Run-->
+    <Arguments>
+      <argument>\\blue\arc\Common\scripts\app_runners\System_Tray\Tray_Tools\screenshot.py</argument>
+    </Arguments>
+  </Action>
+  <!--Menu Element Will Be Added To Top Level Try Menu as a sub menu-->
+  <Menus>
+    <Menu name="System Tools">
+      <!--Actions Found Within Menu Element Will Be Added To That Menu-->
+      <Action name="Screen Shot" icon="" path_to_executable="\\blue\app_config\python\Python27\pythonw.exe">
+        <!--Arguments Are The Options Used Along Side The Executable In Python This would Be The sys.argv varaible
+        This Will Most Of The Time Be A Single Arg That Points To The File That The Executeable Is To Run-->
+        <Arguments>
+          <argument>\\blue\arc\Common\scripts\app_runners\System_Tray\Tray_Tools\screenshot.py</argument>
+        </Arguments>
+      </Action>
+      <Environment>
+        <Item key="AW_Base" value="stringValue" />
+      </Environment>
+    </Menu>
+  </Menus>
+</Root>

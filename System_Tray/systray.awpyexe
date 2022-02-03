@@ -1,0 +1,239 @@
+#!/usr/bin/env python
+
+############################################################################
+#
+#  Copyright (C) 2006-2007 Trolltech ASA. All rights reserved.
+#
+#  This file is part of the example classes of the Qt Toolkit.
+#
+#  This file may be used under the terms of the GNU General Public
+#  License version 2.0 as published by the Free Software Foundation
+#  and appearing in the file LICENSE.GPL included in the packaging of
+#  this file.  Please review the following information to ensure GNU
+#  General Public Licensing requirements will be met:
+#  http://trolltech.com/products/qt/licenses/licensing/opensource/
+#
+#  If you are unsure which license is appropriate for your use, please
+#  review the following information:
+#  http://trolltech.com/products/qt/licenses/licensing/licensingoverview
+#  or contact the sales department at sales@trolltech.com.
+#
+#  In addition, as a special exception, Trolltech gives you certain
+#  additional rights. These rights are described in the Trolltech GPL
+#  Exception version 1.0, which can be found at
+#  http://www.trolltech.com/products/qt/gplexception/ and in the file
+#  GPL_EXCEPTION.txt in this package.
+#
+#  In addition, as a special exception, Trolltech, as the sole copyright
+#  holder for Qt Designer, grants users of the Qt/Eclipse Integration
+#  plug-in the right for the Qt/Eclipse Integration to link to
+#  functionality provided by Qt Designer and its related libraries.
+#
+#  Trolltech reserves all rights not expressly granted herein.
+#
+#  Trolltech ASA (c) 2007
+#
+#  This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+#  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+#
+############################################################################
+
+# This is only needed for Python v2 but is harmless for Python v3.
+#import sip
+#sip.setapi('QVariant', 2)
+
+from PySide import QtCore, QtGui
+import os
+from glob import glob
+from xml.etree import ElementTree as etree
+
+if not os.path.realpath(os.path.dirname(__file__) +"\\..\\..") in os.sys.path:
+	os.sys.path.append(os.path.realpath(os.path.dirname(__file__) +"\\..\\.."))
+import Environment_Access.System_Paths
+import Environment_Access.System_Settings
+# [r"\\blue\arc\Common\scripts\app_runners\System_Tray\Tray_Tools\screenshot.py"]
+########################################################################
+class XML_Action_Item(object):
+	""""""
+	#----------------------------------------------------------------------
+	def __init__(self):
+		"""Constructor"""
+		self.name = ""
+		self.icon = None
+		self.executable = ""
+		self.working_directory = ""
+		self.Args = []
+		self.Environment = {}
+########################################################################
+class XML_Menu_Item(object):
+	""""""
+	#----------------------------------------------------------------------
+	def __init__(self):
+		"""Constructor"""
+		self.name = ""
+		self.actions = []
+########################################################################
+class Runnable_Application(QtCore.QRunnable):
+	""""""
+	#----------------------------------------------------------------------
+	def __init__(self, path_to_executable=None, executable_arguments=[],environment={}):
+		"""Constructor"""
+		QtCore.QRunnable.__init__(self)
+		if path_to_executable is None:
+			path_to_executable = Environment_Access.System_Settings.GLOBAL_WPYTHON_EXE
+		self._executable  = path_to_executable
+		self._arguments   = executable_arguments
+		self._environment = QtCore.QProcessEnvironment().systemEnvironment()
+		for key,value in environment.iteritems():
+			if self._environment.contains(key):
+				self._environment.remove(key)
+	#----------------------------------------------------------------------
+	def run(self):
+		self.app = QtCore.QProcess()
+		self.app.setProcessEnvironment(self._environment)
+				
+		if len(self._arguments):
+			self.app.execute(self._executable, self._arguments)
+		else:
+			self.app.execute(self._executable,[])
+########################################################################
+class Runnable(object):
+	""""""
+	#----------------------------------------------------------------------
+	def __init__(self, path_to_executable=None, executable_arguments=[],environment={}):
+		"""Constructor"""
+		self._executable = path_to_executable
+		self._arguments  = executable_arguments
+		self._environment = environment
+	#----------------------------------------------------------------------
+	def run_it(self):
+		""""""
+		self.app = Runnable_Application(self._executable, self._arguments,self._environment)
+		QtCore.QThreadPool.globalInstance().start(self.app)
+
+########################################################################
+class Runnable_QAction(QtGui.QAction):
+	""""""
+
+	#----------------------------------------------------------------------
+	def __init__(self, name, parent, runnable_application):
+		"""Constructor"""
+		QtGui.QAction.__init__(self, name, parent)
+		self._runnable = runnable_application
+		self.triggered.connect(self._runnable.run_it)
+	
+########################################################################
+class QSystemTrayIcon(QtGui.QSystemTrayIcon):
+	#----------------------------------------------------------------------
+	def __init__(self):
+		""""""
+		self.desktop = QtGui.QApplication.desktop()
+		super(QSystemTrayIcon, self).__init__(self.desktop)
+		self.get_xml_files()
+		self._run_setup()
+		self.setIcon(QtGui.QIcon(Environment_Access.System_Settings.AWPYEXE_ICON))
+		self.activated.connect(self.Activated)
+		self.activated.emit(self.Context)
+		self.setVisible(True)
+		self.show()
+	#----------------------------------------------------------------------
+	def get_xml_files(self):
+		""""""
+		menu_folder = os.path.join(os.path.dirname(__file__), "Menu_Items")
+		self.xml_files = [f for f in glob(menu_folder+"\*.xml") if not os.path.basename(f) == "Templet.xml"]
+		
+	def _run_setup(self):
+		# self._runnable_apps = {}
+		# self._action_triggers = []
+		# self._xml_menus = {}
+		# self._xml_menu_keys = []
+		self.trayMenu = QtGui.QMenu()
+		current_action_num = 1
+		for f in self.xml_files:
+			tree = etree.parse(f)
+			root = tree.getroot()
+			# file_menu_name = ' '.join(os.path.basename(f).split(".")[0].split("_"))
+			# file_menu = self.trayMenu.addMenu(file_menu_name)
+			for root_action in root.findall('Action'):
+				arguments = []
+				environment = {}
+				name = root_action.get('name', "action "+str(current_action_num))
+				path_to_executable = root_action.get("path_to_executable", None)
+				if str(path_to_executable) == "":
+					path_to_executable = None
+				icon = root_action.get("icon", None)
+				for argument in root_action.findall("Arguments/argument"):
+					arguments.append(argument.text)
+					
+				for env_item in root_action.findall("Environment/Item"):
+					key = env_item.get("key")
+					val = env_item.get("value")
+					environment[key] = val
+				
+				if not name in [a.objectName() for a in self.trayMenu.actions()]:
+					app     = Runnable(path_to_executable=path_to_executable, executable_arguments=arguments,environment=environment)
+					action  = Runnable_QAction(name,self,app)
+					action.setObjectName(name)
+					if icon is not None and len(icon):
+						action.setIcon(QtGui.QIcon(icon))
+					self.trayMenu.addAction(action)
+					current_action_num += 1
+			
+			for root_menu in root.findall('Menus/Menu'):
+				menu_name = root_menu.get("name")
+				if len(self.trayMenu.findChildren(QtGui.QMenu, unicode(menu_name))):
+					sub_menu = self.trayMenu.findChildren(QtGui.QMenu, unicode(menu_name))[0]
+				else:
+					sub_menu = self.trayMenu.addMenu(menu_name)
+					sub_menu.setObjectName(menu_name)
+				
+				for menu_action in root_menu.findall('Action'):
+					arguments = []
+					environment = {}
+					name = menu_action.get('name', "action "+str(current_action_num))
+					path_to_executable = menu_action.get("path_to_executable", None)
+					if str(path_to_executable) == "":
+						path_to_executable = None
+					icon = menu_action.get("icon", None)
+					for argument in menu_action.findall("Arguments/argument"):
+						arguments.append(argument.text)
+						
+					for env_item in menu_action.findall("Environment/Item"):
+						key = env_item.get("key")
+						val = env_item.get("value")
+						environment[key] = val
+						
+					if not name in [a.objectName() for a in sub_menu.actions()]:
+						app     = Runnable(path_to_executable=path_to_executable, executable_arguments=arguments,environment=environment)
+						action  = Runnable_QAction(name,self,app)
+						action.setObjectName(name)
+						sub_menu.addAction(action)
+					current_action_num += 1
+		self.trayMenu.addSeparator()
+		self.action_quit      = QtGui.QAction("&Quit",   self,triggered=QtGui.qApp.quit)
+		self.trayMenu.addAction(self.action_quit)
+		self.setContextMenu(self.trayMenu)
+		
+	def Run_Screen_Shot(self):
+		app = Runnable_Application()
+		QtCore.QThreadPool.globalInstance().start(app)
+		
+	def Activated(self, reason):
+		if reason in [QtGui.QSystemTrayIcon.Trigger]:
+			self.trayMenu.exec_(QtCore.QPoint(self.geometry().x(), self.geometry().y()))
+
+if __name__ == '__main__':
+
+	import sys
+
+	app = QtGui.QApplication(sys.argv)
+
+	if not QtGui.QSystemTrayIcon.isSystemTrayAvailable():
+		QtGui.QMessageBox.critical(None, "Systray", "I couldn't detect any system tray on this system.")
+		sys.exit(1)
+
+	QtGui.QApplication.setQuitOnLastWindowClosed(False)
+
+	window2 = QSystemTrayIcon()
+	
+	sys.exit(app.exec_())
